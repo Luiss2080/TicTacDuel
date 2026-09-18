@@ -52,6 +52,7 @@ public class Juego {
 
     /**
      * Intenta ejecutar un movimiento completo en el modelo.
+     * 0. Rechaza cualquier movimiento si la partida ya terminó.
      * 1. Valida el movimiento según las reglas.
      * 2. Coloca la ficha si es válido.
      * 3. Comprueba si el movimiento termina la partida (victoria o empate).
@@ -61,6 +62,9 @@ public class Juego {
      * @return true si el movimiento fue legal y se procesó.
      */
     public boolean realizarMovimiento(int fila, int columna) {
+        if (finalizado) {
+            return false;
+        }
         if (reglas.esMovimientoValido(tablero, fila, columna)) {
             // Colocamos la ficha del jugador actual en el tablero
             tablero.colocarFicha(fila, columna, jugadorActual.obtenerFicha());

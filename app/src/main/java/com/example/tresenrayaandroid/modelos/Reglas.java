@@ -19,13 +19,16 @@ public class Reglas {
     }
 
     /**
-     * Valida si un movimiento es permitido (celda vacía).
+     * Valida si un movimiento es permitido (posición dentro del tablero y celda vacía).
      * @param tablero Estado actual del tablero.
      * @param fila Fila del movimiento.
      * @param columna Columna del movimiento.
      * @return true si el movimiento cumple las reglas.
      */
     public boolean esMovimientoValido(Tablero tablero, int fila, int columna) {
+        if (fila < 0 || fila > 2 || columna < 0 || columna > 2) {
+            return false;
+        }
         return tablero.obtenerFicha(fila, columna) == null;
     }
 

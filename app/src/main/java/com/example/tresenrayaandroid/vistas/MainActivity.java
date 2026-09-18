@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat;
 import com.example.tresenrayaandroid.R;
 import com.example.tresenrayaandroid.controladores.ControladorPartida;
 import com.example.tresenrayaandroid.controladores.ControladorTablero;
+import com.example.tresenrayaandroid.modelos.Ficha;
 import com.example.tresenrayaandroid.modelos.Juego;
 import com.google.android.material.button.MaterialButton;
 
@@ -18,6 +19,12 @@ import java.util.Locale;
  */
 public class MainActivity extends AppCompatActivity {
 
+    private static final String CLAVE_TABLERO = "tablero";
+    private static final String CLAVE_TURNO = "turno";
+    private static final String CLAVE_PUNTOS_X = "puntosX";
+    private static final String CLAVE_PUNTOS_O = "puntosO";
+
+    private Juego juego;
     private ControladorTablero controladorTablero;
     private ControladorPartida controladorPartida;
 
@@ -31,9 +38,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Juego juegoModelo = new Juego();
-        controladorTablero = new ControladorTablero(juegoModelo);
-        controladorPartida = new ControladorPartida(juegoModelo);
+        juego = new Juego();
+        controladorTablero = new ControladorTablero(juego);
+        controladorPartida = new ControladorPartida(juego);
 
         inicializarComponentes();
         configurarTablero();
@@ -50,8 +57,61 @@ public class MainActivity extends AppCompatActivity {
             botonNuevoJuego.setOnClickListener(v -> nuevoJuego());
         }
 
+        // Tras una rotación (o recreación de la actividad) se recupera la partida en curso
+        if (savedInstanceState == null || !restaurarEstado(savedInstanceState)) {
+            actualizarMarcadores();
+            actualizarEstadoTurno();
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(CLAVE_TABLERO, juego.serializarTablero());
+        outState.putString(CLAVE_TURNO, controladorTablero.obtenerSimboloActual());
+        outState.putInt(CLAVE_PUNTOS_X, controladorPartida.obtenerPuntuacionX());
+        outState.putInt(CLAVE_PUNTOS_O, controladorPartida.obtenerPuntuacionO());
+    }
+
+    /**
+     * Reconstruye modelo y vista a partir del estado guardado.
+     * @return true si había un estado válido que restaurar.
+     */
+    private boolean restaurarEstado(Bundle estado) {
+        Ficha turno = "O".equals(estado.getString(CLAVE_TURNO)) ? Ficha.O : Ficha.X;
+        if (!juego.restaurarEstado(estado.getString(CLAVE_TABLERO), turno)) {
+            return false;
+        }
+        controladorPartida.restaurarPuntuaciones(
+                estado.getInt(CLAVE_PUNTOS_X), estado.getInt(CLAVE_PUNTOS_O));
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                MaterialButton boton = matrizBotones[i][j];
+                if (boton == null) {
+                    continue;
+                }
+                Ficha ficha = juego.obtenerFicha(i, j);
+                boton.setText(ficha == null ? "" : ficha.toString());
+                boton.setEnabled(ficha == null && !juego.estaFinalizado());
+                if (ficha == Ficha.X) {
+                    boton.setTextColor(ContextCompat.getColor(this, R.color.game_player_x));
+                } else if (ficha == Ficha.O) {
+                    boton.setTextColor(ContextCompat.getColor(this, R.color.game_player_o));
+                }
+            }
+        }
+
         actualizarMarcadores();
-        actualizarEstadoTurno();
+        if (juego.hayGanador()) {
+            // Al ganar no se cambia el turno: el jugador actual es el ganador
+            textoEstado.setText(turno == Ficha.X ? R.string.player_x_wins : R.string.player_o_wins);
+        } else if (juego.estaLleno()) {
+            textoEstado.setText(R.string.draw);
+        } else {
+            actualizarEstadoTurno();
+        }
+        return true;
     }
 
     private void inicializarComponentes() {
@@ -156,9 +216,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void nuevoJuego() {
         // Reinicia el juego creando una nueva instancia del modelo y controladores
-        Juego juegoModelo = new Juego();
-        controladorPartida = new ControladorPartida(juegoModelo);
-        controladorTablero = new ControladorTablero(juegoModelo);
+        juego = new Juego();
+        controladorPartida = new ControladorPartida(juego);
+        controladorTablero = new ControladorTablero(juego);
 
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {

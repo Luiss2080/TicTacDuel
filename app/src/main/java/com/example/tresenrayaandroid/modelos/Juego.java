@@ -107,4 +107,61 @@ public class Juego {
     public boolean estaLleno() {
         return tablero.estaLleno();
     }
+
+    // --- Persistencia del estado (rotación de pantalla, etc.) ---
+
+    /**
+     * Devuelve la ficha situada en una celda (null si está vacía).
+     */
+    public Ficha obtenerFicha(int fila, int columna) {
+        return tablero.obtenerFicha(fila, columna);
+    }
+
+    /**
+     * Serializa el tablero en 9 caracteres (fila a fila): 'X', 'O' o '-' si está vacía.
+     */
+    public String serializarTablero() {
+        StringBuilder sb = new StringBuilder(9);
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                Ficha f = tablero.obtenerFicha(i, j);
+                sb.append(f == null ? '-' : (f == Ficha.X ? 'X' : 'O'));
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Restaura el estado a partir de un tablero serializado y del jugador con el turno.
+     * Recalcula si la partida está finalizada. Si los datos no son válidos, no modifica nada.
+     *
+     * @param tableroSerializado cadena de 9 caracteres ('X', 'O' o '-').
+     * @param turno ficha del jugador al que le corresponde mover.
+     * @return true si el estado se restauró.
+     */
+    public boolean restaurarEstado(String tableroSerializado, Ficha turno) {
+        if (tableroSerializado == null || tableroSerializado.length() != 9 || turno == null) {
+            return false;
+        }
+        Ficha[] celdas = new Ficha[9];
+        for (int k = 0; k < 9; k++) {
+            char c = tableroSerializado.charAt(k);
+            if (c == 'X') {
+                celdas[k] = Ficha.X;
+            } else if (c == 'O') {
+                celdas[k] = Ficha.O;
+            } else if (c != '-') {
+                return false;
+            }
+        }
+        tablero.reiniciar();
+        for (int k = 0; k < 9; k++) {
+            if (celdas[k] != null) {
+                tablero.colocarFicha(k / 3, k % 3, celdas[k]);
+            }
+        }
+        jugadorActual = (turno == Ficha.X) ? jugadorX : jugadorO;
+        finalizado = reglas.es3EnRaya(tablero) || tablero.estaLleno();
+        return true;
+    }
 }

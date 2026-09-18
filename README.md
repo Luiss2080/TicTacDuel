@@ -1,4 +1,4 @@
-# <<NOMBRE>>
+# TicTacDuel
 
 Juego de **Tres en Raya** (tres en línea) para Android, escrito en **Java**, para **dos jugadores en el mismo dispositivo**. Se juega por turnos: X empieza siempre y O responde.
 

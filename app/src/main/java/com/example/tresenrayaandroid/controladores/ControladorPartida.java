@@ -80,4 +80,12 @@ public class ControladorPartida {
     public int obtenerPuntuacionO() {
         return puntuacionO;
     }
+
+    /**
+     * Restaura el marcador (por ejemplo tras recrearse la actividad).
+     */
+    public void restaurarPuntuaciones(int puntuacionX, int puntuacionO) {
+        this.puntuacionX = Math.max(0, puntuacionX);
+        this.puntuacionO = Math.max(0, puntuacionO);
+    }
 }
